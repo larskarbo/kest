@@ -8,7 +8,6 @@ from sbanken import lates_trans
 user = {'username': 'larskarbo', 'id': 912275377}
 
 bot = telegram.Bot(token=os.environ["KEST_MONEY_TELEGRAM_BOT_API"])
-bot.send_message(chat_id=user["id"], text="I'm sorry Dave I'm afraid I can't do that.")
 
 import threading
 
@@ -25,7 +24,7 @@ def check():
 	global last_length
 	t = lates_trans()
 	if len(t) > last_length:
-		latest = t[-1]
+		latest = t[0]
 		bot.send_message(chat_id=user["id"], text="Transaction: " + str(latest["amount"]) + ' "' + latest["text"] + '"')
 		last_length = len(t)
 
