@@ -109,7 +109,7 @@ const keyboard = (accounts: Account[]) => {
         }
         return Markup.callbackButton(`${account.name} - ${account.balance}kr`, account.id);
       }),
-      3
+      2
     )
   );
 };
@@ -167,8 +167,8 @@ bot.command("send",async (ctx) => {
 bot.command("overview",async (ctx) => {
 
   const accounts: Account[] = await getAccounts();
-	await ctx.reply("choose", keyboard(accounts).extra());
-
+	await ctx.reply("Accounts:", keyboard(accounts).extra());
+	help(ctx)
 });
 
 
