@@ -1,10 +1,7 @@
 module.exports = {
-  apps: [
-    {
-      name: "kest",
-			script: "main.py",
-			interpreter: "pipenv",
-			interpreter_args: "run python",
-    },
-  ],
+  apps : [{
+    name: 'kest',
+    script: 'npm',
+    args: 'start',
+  }]
 };

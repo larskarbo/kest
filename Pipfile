@@ -10,6 +10,7 @@ requests = "*"
 pprint = "*"
 notion = "*"
 python-telegram-bot = "*"
+bottle = "*"
 
 [requires]
 python_version = "3.7"

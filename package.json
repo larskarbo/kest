@@ -1,0 +1,27 @@
+{
+  "name": "kest",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:larskarbo/kest.git",
+  "author": "Lars Karbo <mail@larskarbo.no>",
+  "license": "MIT",
+  "dependencies": {
+    "array-chunk": "^1.0.0",
+    "axios": "^0.19.2",
+    "btoa": "^1.2.1",
+    "superagent": "^5.2.2",
+    "telegraf": "^3.38.0",
+    "telegraf-ask": "^1.0.0",
+    "typescript": "^3.9.5"
+  },
+  "scripts": {
+    "start": "concurrently -k \"pipenv run python server/server.py\" \"ts-node src/index\"",
+    "dev": "ts-node-dev --no-notify src/index.ts",
+    "devserver": "pipenv run python server/server.py"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.13",
+    "concurrently": "^5.2.0",
+    "ts-node": "^8.10.2"
+  }
+}
