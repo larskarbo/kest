@@ -19,11 +19,12 @@ interface Account {
 	name: string;
 	balance: number;
 	id: string;
-	medium: string
+	medium: string;
+	tags: Array<string>
 }
 
 const help = async (ctx) => {
-	ctx.reply("/start /add /recalculate /overview /latest")
+	ctx.reply("/start /add /recalculate /overview /latest /fillfromcolumn")
 }
 
 bot.command("start", async (ctx) => {
@@ -104,6 +105,7 @@ const keyboard = (accounts: Account[]) => {
 		arrayChunk(
 			accounts
 				.filter(a => a.medium == "kest")
+				.filter(a => a.tags.includes("common"))
 				.map((account) => {
 					console.log('account: ', account);
 					if (!account.id) {
@@ -114,19 +116,6 @@ const keyboard = (accounts: Account[]) => {
 			2
 		)
 	);
-};
-
-const testTransaction = async () => {
-	const accounts: Account[] = await getAccounts();
-	console.log("accounts: ", accounts);
-	const trans: Transaction = {
-		name: "horse",
-		amount: 444,
-		fromAccount: accounts.find((a) => a.name == "Drowzee Lønn")?.id,
-		toAccount: accounts.find((a) => a.name == "Lunsjmat")?.id,
-	};
-	console.log(trans);
-	await axios.post("http://localhost:4494/addTransaction", trans);
 };
 
 const getAccounts = async () => {
@@ -144,6 +133,11 @@ const getAccounts = async () => {
 
 bot.command("recalculate", async (ctx) => {
 	await axios.get("http://localhost:4494/reCalculateAccounts");
+	ctx.reply("done");
+});
+
+bot.command("fillfromcolumn", async (ctx) => {
+	await axios.get("http://localhost:4494/fillFromColumn");
 	ctx.reply("done");
 });
 

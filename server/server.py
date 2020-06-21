@@ -28,21 +28,15 @@ def fillFromColumn():
 		if not account.fillcolumn:
 			continue
 		print(account.fillcolumn)
-		row = transactions.collection.add_row()
-		row.date = datetime.now()
-		row.type = "fill"
-		row.name = "Fill " + account.title + " from fillcolumn"
-		row.amount = account.fillcolumn
-		row.toAccount = [account.id]
+
+		addTransaction({
+			"name": "Fill " + account.title + " from fillcolumn",
+			"amount": account.fillcolumn,
+			"toAccount": account.id
+		})
 		account.fillcolumn = 0
-	reCalculateAccounts()
 
 def monthlyFill():
-	salaryAccount = False
-	for account in accounts.collection.get_rows():
-		if account.medium == "salary":
-			salaryAccount = account
-			break
 
 	if not salaryAccount:
 		raise Exception('No salaryaccount!')
@@ -51,24 +45,21 @@ def monthlyFill():
 		if not account.monthly_refill:
 			continue
 
-		if account.medium != "salary" and account.medium != "kest":
+		if account.medium != "kest":
 			continue
 		row = transactions.collection.add_row()
 		row.date = datetime.now()
 
 		row.type = "monthly-fill"
 		row.name = "Monthly-fill: " + account.title
-		if account.monthly_refill < 0:
-			row.amount = account.monthly_refill * -1
-		else:
-			row.fromAccount = [salaryAccount.id]
-			row.amount = account.monthly_refill
+		row.amount = account.monthly_refill
 
 		row.toAccount = [account.id]
 		account.fillcolumn = 0
+
 # monthlyFill()
-# fillFromColumn()
-# reCalculateAccounts()
+
+
 
 @get('/getposts')
 def index():
@@ -82,7 +73,8 @@ def index():
 			"name": a.name,
 			"balance": a.balance,
 			"id": a.id,
-			"medium": a.medium
+			"medium": a.medium,
+			"tags": a.tags
 		}
 		if a.icon:
 			account["icon"] = a.icon
@@ -94,22 +86,31 @@ def index():
 	reCalculateAccounts()
 	return {"posts":"horse"}
 
-@post('/addTransaction')
+@get('/fillFromColumn')
 def index():
-	print(request.json)
+	fillFromColumn()
+	return {"posts":"horse"}
+
+def addTransaction(trans):
 	row = transactions.collection.add_row()
 	row.date = datetime.now()
 	row.type = "expense"
-	row.name = request.json["name"]
-	row.amount = request.json["amount"]
-	if "fromAccount" in request.json:
-		row.fromAccount = [request.json["fromAccount"]]
-		fromAcc = client.get_block(request.json["fromAccount"])
-		fromAcc.balance -= request.json["amount"]
-	if "toAccount" in request.json:
-		row.toAccount = [request.json["toAccount"]]
-		toAcc = client.get_block(request.json["fromAccount"])
-		toAcc.balance += request.json["amount"]
+	row.name = trans["name"]
+	row.amount = trans["amount"]
+	if "fromAccount" in trans:
+		row.fromAccount = [trans["fromAccount"]]
+		fromAcc = client.get_block(trans["fromAccount"])
+		fromAcc.balance -= trans["amount"]
+	if "toAccount" in trans:
+		row.toAccount = [trans["toAccount"]]
+		toAcc = client.get_block(trans["toAccount"])
+		toAcc.balance += trans["amount"]
+
+@post('/addTransaction')
+def index():
+	print(request.json)
+	addTransaction(request.json)
+
 	return {"posts":"horse"}
 
 # for account in accounts.collection.get_rows():
