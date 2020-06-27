@@ -23,7 +23,7 @@ export const getBankAccount = async () => {
 };
 
 export const startPolling = async (onNewTransaction) => {
-	let oldTransactions = []//await getTransactions();
+	let oldTransactions = await getTransactions();
 	setInterval(async () => {
 		const trans = await getTransactions();
 		if(JSON.stringify(trans) != JSON.stringify(oldTransactions)){
