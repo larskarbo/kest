@@ -1,12 +1,13 @@
 import Telegraf, { Markup, Context } from "telegraf";
 import axios from "axios";
 import Quiz, { Alternative, Question } from "telegraf-ask";
+const roundTo = require('round-to');
+import { getTransactions, getBankAccount, startPolling } from "../sbanken"
 
-const getTransactions = require("../sbanken");
 var arrayChunk = require("array-chunk");
 
 const bot = new Telegraf(process.env.KEST_MONEY_TELEGRAM_BOT_API as string);
-
+let awaitingTransactions = []
 interface Transaction {
 	name: string;
 	amount: number;
@@ -24,7 +25,14 @@ interface Account {
 }
 
 const help = async (ctx) => {
-	ctx.reply("/start /add /recalculate /overview /latest /fillfromcolumn")
+
+	const os = await diff()
+	if (os != 0) {
+		await ctx.reply("Kest and bank not in sync: " + os + " too much in kest");
+	} else {
+		await ctx.reply("Kest and bank in sync!")
+	}
+	ctx.reply("/start /add /recalculate /overview /awaiting /latest /fillfromcolumn")
 }
 
 bot.command("start", async (ctx) => {
@@ -35,10 +43,12 @@ bot.command("start", async (ctx) => {
 
 });
 
-bot.use((_, next) => {
+bot.use((ctx, next) => {
+	// console.log(ctx)
 	// ctx.reply("middleware")
 	next();
 });
+
 bot.command("add", async (ctx) => {
 	askAddTransaction(ctx)
 });
@@ -61,7 +71,7 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 		{
 			text: "How much was it?",
 			key: "amount",
-			validateFn: (a) => parseInt(a),
+			validateFn: (a) => parseFloat(a),
 			alternatives: [
 				// {
 				// 	text:"horse",
@@ -72,10 +82,14 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 		{
 			text: "Which account do you want to take the money from?",
 			key: "account",
-			alternatives: accounts.map((a) => ({
-				text: a.name,
-				value: a.id,
-			})),
+			alternatives: accounts
+				.filter(a => a.medium == "kest")
+				.filter(a => !a.tags.includes("hide"))
+				.filter(a => !a.tags.includes("lt"))
+				.map((a) => ({
+					text: a.name,
+					value: a.id,
+				})),
 		},
 	];
 
@@ -86,15 +100,16 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 		bot: bot,
 	});
 	quiz.startQuiz(async (answers: any) => {
-		console.log("answers: ", answers);
 		const transaction: Transaction = {
 			name: answers.name,
-			amount: parseInt(answers.amount),
+			amount: parseFloat(answers.amount),
 			fromAccount: answers.account,
 		};
 		await ctx.reply("Updating db");
+		const preAccount = (await getAccounts()).find(a => a.id == answers.account)
 		await axios.post("http://localhost:4494/addTransaction", transaction);
-		await ctx.reply("Thanks");
+		const postAccount = (await getAccounts()).find(a => a.id == answers.account)
+		await ctx.reply(`${preAccount.name} went from ${preAccount.balance} → ${postAccount.balance}`);
 		help(ctx)
 
 	});
@@ -107,7 +122,6 @@ const keyboard = (accounts: Account[]) => {
 				.filter(a => a.medium == "kest")
 				.filter(a => a.tags.includes("common"))
 				.map((account) => {
-					console.log('account: ', account);
 					if (!account.id) {
 						throw new Error("please add id!");
 					}
@@ -128,7 +142,6 @@ const getAccounts = async () => {
 					name: (a.icon || "") + a.name,
 				}))
 		})
-		.catch(a => console.log('wtf', a))
 };
 
 bot.command("recalculate", async (ctx) => {
@@ -144,17 +157,13 @@ bot.command("fillfromcolumn", async (ctx) => {
 bot.command("latest", async (ctx) => {
 
 	// setTimeout(async () => {
-	console.log("here")
 	const t: Array<any> = await getTransactions();
-	console.log('t: ', t.map(t=>t.text));
-	console.log("here2")
 	const lastT = t.shift()
 
 	const trans: Transaction = {
 		name: lastT.text,
 		amount: lastT.amount * -1
 	}
-	console.log("here3")
 	// if(false){
 	askAddTransaction(ctx, trans)
 	// }
@@ -166,8 +175,60 @@ bot.command("overview", async (ctx) => {
 	const accounts: Account[] = await getAccounts();
 	await ctx.reply("Accounts:", keyboard(accounts).extra());
 	help(ctx)
+
 });
 
+bot.command("awaiting", async (ctx) => {
+
+	const accounts: Account[] = await getAccounts();
+	await ctx.reply("Diff: " + await diff());
+
+
+	const questions: Question[] = [
+		{
+			text: "Awaiting:",
+			key: "transaction",
+			validateFn: (a) => a,
+			alternatives: awaitingTransactions
+				.map((trans) => {
+					return { text: trans.text + " → " + trans.amount * -1, value: trans };
+				}),
+		},
+	];
+
+	const quiz = new Quiz({
+		questions: questions,
+		answers: {},
+		ctx: ctx,
+		bot: bot,
+	});
+
+	quiz.startQuiz(async (answers: any) => {
+		askAddTransaction(ctx, {
+			...answers.transaction,
+			name: answers.transaction.text,
+		})
+		console.log('answers: ', answers);
+
+	});
+
+});
+
+const diff = async () => {
+	const accounts: Account[] = await getAccounts();
+	const balance = roundTo(accounts.reduce((prev, cur) => prev + cur.balance, 0), 2)
+	const bank = await getBankAccount()
+
+	const additional = await axios.get("http://localhost:4494/additionalLocations").then(a => a.data.locs)
+	const additionalMoney = additional.reduce((prev, cur) => prev + cur.amount, 0)
+	const asdf = balance - additionalMoney
+
+	return roundTo(asdf - bank.available, 2)
+}
+
+startPolling((trans) => {
+	awaitingTransactions.push(trans)
+})
 
 // testTransaction()
 bot.launch();

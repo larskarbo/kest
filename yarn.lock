@@ -394,6 +394,11 @@ resolve@^1.10.0:
   dependencies:
     path-parse "^1.0.6"
 
+round-to@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/round-to/-/round-to-4.1.0.tgz#148d768d18b2f127f78e6648cb8b0a5943c416bf"
+  integrity sha512-H/4z+4QdWS82iMZ23+5St302Mv2jJws0hUvEogrD6gC8NN6Z5TalDtbg51owCrVy4V/4c8ePvwVLNtlhEfPo5g==
+
 rxjs@^6.5.2:
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.5.5.tgz#c5c884e3094c8cfee31bf27eb87e54ccfc87f9ec"
@@ -524,12 +529,13 @@ supports-color@^6.1.0:
   dependencies:
     has-flag "^3.0.0"
 
-telegraf-ask@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/telegraf-ask/-/telegraf-ask-1.0.0.tgz#28a78dea2f6fda2db190a1e7ea81fc78e8b18f9a"
-  integrity sha512-JT3GJ5QTSwcLlGLix18IKSZKXdl0jqCFNsvur+j9KZ4gYockaHvmceLeuQuZrLwevHwkvOi9H4C9YkKJ+hlyXA==
+telegraf-ask@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/telegraf-ask/-/telegraf-ask-1.0.1.tgz#a0a7095456213a68aca40bb240af84d932b5be5e"
+  integrity sha512-Wg7apZfXoyJdBewZuFtbh9B6MFXoyasd7gpMQ6r4A26NtZEzBWe43Vr6MutuVJHddV+4KjUkJsOfujZYdHjo4g==
   dependencies:
     "@types/node" "^14.0.13"
+    array-chunk "^1.0.0"
     telegraf "^3.38.0"
     uuid "^8.1.0"
 
