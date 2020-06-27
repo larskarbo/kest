@@ -207,6 +207,7 @@ bot.command("awaiting", async (ctx) => {
 		askAddTransaction(ctx, {
 			...answers.transaction,
 			name: answers.transaction.text,
+			amount: answers.transaction.amount * -1,
 		})
 		console.log('answers: ', answers);
 
