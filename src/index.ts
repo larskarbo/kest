@@ -209,7 +209,7 @@ bot.command("awaiting", async (ctx) => {
 			name: answers.transaction.text,
 			amount: answers.transaction.amount * -1,
 		})
-		awaitingTransactions = awaitingTransactions.filter(a=> a != answers.transaction)
+		awaitingTransactions = awaitingTransactions.filter(a=> JSON.stringify(a) != JSON.stringify(answers.transaction))
 		console.log('answers: ', answers);
 
 	});

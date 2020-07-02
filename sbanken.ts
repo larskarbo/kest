@@ -23,14 +23,15 @@ export const getBankAccount = async () => {
 };
 
 export const startPolling = async (onNewTransaction) => {
-	let oldTransactions = await getTransactions();
+	let oldTransactions = (await getTransactions()).map(t => t.amount)
 	setInterval(async () => {
 		const trans = await getTransactions();
-		if(JSON.stringify(trans) != JSON.stringify(oldTransactions)){
+		const transAmounts = trans.map(t => t.amount)
+		if(JSON.stringify(transAmounts) != JSON.stringify(oldTransactions)){
 			console.log(trans[0])
 			onNewTransaction(trans[0])
 		}
-		oldTransactions = trans
+		oldTransactions = transAmounts
 		//todo what if two transactions happened in the same window?
 	}, 15000)
 };
