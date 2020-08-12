@@ -8,12 +8,16 @@
   "dependencies": {
     "array-chunk": "^1.0.0",
     "axios": "^0.19.2",
+    "better-sqlite3": "^7.1.0",
     "btoa": "^1.2.1",
+    "moment": "^2.27.0",
     "round-to": "^4.1.0",
+    "sqlite3": "^5.0.0",
     "superagent": "^5.2.2",
     "telegraf": "^3.38.0",
     "telegraf-ask": "^1.0.1",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.5",
+    "uuid": "^8.3.0"
   },
   "scripts": {
     "start": "concurrently -k \"pipenv run python server/server.py\" \"ts-node src/index\"",

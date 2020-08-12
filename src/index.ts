@@ -6,6 +6,16 @@ import { getTransactions, getBankAccount, startPolling } from "../sbanken"
 
 var arrayChunk = require("array-chunk");
 
+const pythonBridge = (userID) => axios.create({
+	baseURL: 'http://localhost:4494/',
+	headers: { 'X-kest-user': userIdMap[userID] }
+})
+
+const userIdMap = {
+	912275377: "lars",
+	501141030: "cyri"
+}
+
 const bot = new Telegraf(process.env.KEST_MONEY_TELEGRAM_BOT_API as string);
 let awaitingTransactions = []
 interface Transaction {
@@ -25,8 +35,7 @@ interface Account {
 }
 
 const help = async (ctx) => {
-
-	const os = await diff()
+	const os = await diff(ctx)
 	if (os != 0) {
 		await ctx.reply("Kest and bank not in sync: " + os + " too much in kest");
 	} else {
@@ -38,6 +47,7 @@ const help = async (ctx) => {
 bot.command("start", async (ctx) => {
 	// ctx.session.done = 0; // restart done counter
 	// ctx.session.quiz = null;
+	console.log(ctx.from.id)
 	await ctx.reply("Welcome to the kest Bot! ⭐️");
 	await help(ctx)
 
@@ -54,7 +64,7 @@ bot.command("add", async (ctx) => {
 });
 
 const askAddTransaction = async (ctx: Context, answers: object = {}) => {
-	const accounts: Account[] = await getAccounts();
+	const accounts: Account[] = await getAccounts(ctx);
 
 	const questions: Question[] = [
 		{
@@ -106,9 +116,9 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 			fromAccount: answers.account,
 		};
 		await ctx.reply("Updating db");
-		const preAccount = (await getAccounts()).find(a => a.id == answers.account)
-		await axios.post("http://localhost:4494/addTransaction", transaction);
-		const postAccount = (await getAccounts()).find(a => a.id == answers.account)
+		const preAccount = (await getAccounts(ctx)).find(a => a.id == answers.account)
+		await pythonBridge(ctx.from.id).post("addTransaction", transaction);
+		const postAccount = (await getAccounts(ctx)).find(a => a.id == answers.account)
 		await ctx.reply(`${preAccount.name} went from ${preAccount.balance} → ${postAccount.balance}`);
 		help(ctx)
 
@@ -132,8 +142,8 @@ const keyboard = (accounts: Account[]) => {
 	);
 };
 
-const getAccounts = async () => {
-	return axios.get("http://localhost:4494/accounts")
+const getAccounts = async (ctx) => {
+	return pythonBridge(ctx.from.id).get("accounts")
 		.then(a => a.data.accounts)
 		.then(accounts => {
 			return accounts
@@ -145,12 +155,12 @@ const getAccounts = async () => {
 };
 
 bot.command("recalculate", async (ctx) => {
-	await axios.get("http://localhost:4494/reCalculateAccounts");
+	await pythonBridge(ctx.from.id).get("reCalculateAccounts");
 	ctx.reply("done");
 });
 
 bot.command("fillfromcolumn", async (ctx) => {
-	await axios.get("http://localhost:4494/fillFromColumn");
+	await pythonBridge(ctx.from.id).get("fillFromColumn");
 	ctx.reply("done");
 });
 
@@ -172,7 +182,8 @@ bot.command("latest", async (ctx) => {
 
 bot.command("overview", async (ctx) => {
 
-	const accounts: Account[] = await getAccounts();
+	const accounts: Account[] = await getAccounts(ctx);
+	console.log('accounts: ', accounts);
 	await ctx.reply("Accounts:", keyboard(accounts).extra());
 	help(ctx)
 
@@ -180,8 +191,8 @@ bot.command("overview", async (ctx) => {
 
 bot.command("awaiting", async (ctx) => {
 
-	const accounts: Account[] = await getAccounts();
-	await ctx.reply("Diff: " + await diff());
+	const accounts: Account[] = await getAccounts(ctx);
+	await ctx.reply("Diff: " + await diff(ctx))
 
 
 	const questions: Question[] = [
@@ -209,19 +220,19 @@ bot.command("awaiting", async (ctx) => {
 			name: answers.transaction.text,
 			amount: answers.transaction.amount * -1,
 		})
-		awaitingTransactions = awaitingTransactions.filter(a=> JSON.stringify(a) != JSON.stringify(answers.transaction))
+		awaitingTransactions = awaitingTransactions.filter(a => JSON.stringify(a) != JSON.stringify(answers.transaction))
 		console.log('answers: ', answers);
 
 	});
 
 });
 
-const diff = async () => {
-	const accounts: Account[] = await getAccounts();
+const diff = async (ctx) => {
+	const accounts: Account[] = await getAccounts(ctx);
 	const balance = roundTo(accounts.reduce((prev, cur) => prev + cur.balance, 0), 2)
 	const bank = await getBankAccount()
 
-	const additional = await axios.get("http://localhost:4494/additionalLocations").then(a => a.data.locs)
+	const additional = await pythonBridge(ctx.from.id).get("additionalLocations").then(a => a.data.locs)
 	const additionalMoney = additional.reduce((prev, cur) => prev + cur.amount, 0)
 	const asdf = balance - additionalMoney
 
