@@ -2,6 +2,7 @@
 import { getTransactions, getBankAccount, startPolling } from "./sbanken"
 import * as Database from "better-sqlite3"
 import { v4 } from "uuid"
+import axios from "axios"
 import * as moment from "moment"
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
@@ -14,6 +15,7 @@ const yo = async () => {
 	const account = await getBankAccount()
 
 	const bucketsBalance = getBalance()
+	
 	const realBalance = account.available * 100
 	if (bucketsBalance == realBalance) {
 		console.log('same! ALL GOOD!!!!')
@@ -82,6 +84,8 @@ const addTransactionToBuckets = (transaction) => {
 	}
 	const sql = `INSERT INTO account_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
 	db.prepare(sql).run(...Object.values(add))
+
+	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text)
 }
 
 
