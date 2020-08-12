@@ -12,14 +12,11 @@ const yo = async () => {
 	// transactions.slice(0,12).forEach(addTransactionToBuckets)
 
 	const account = await getBankAccount()
-	console.log('account: ', account);
 
 	const bucketsBalance = getBalance()
 	const realBalance = account.available * 100
 	if (bucketsBalance == realBalance) {
-		console.log('')
 		console.log('same! ALL GOOD!!!!')
-		console.log('')
 	} else {
 		console.log('not same!')
 		const accountDiff = realBalance - bucketsBalance
