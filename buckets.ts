@@ -24,7 +24,7 @@ const yo = async () => {
 		const accountDiff = realBalance - bucketsBalance
 		console.log('accountDiff: ', accountDiff/100);
 		let i = 0
-		const check = () => {
+		const checkCummulative = () => {
 			i++
 			const checkThese = transactions.slice(0, i)
 			const sum = Math.round(checkThese.reduce((acc, cur) => acc + cur.amount, 0) * 100) / 100
@@ -40,11 +40,32 @@ const yo = async () => {
 				checkThese.forEach(addTransactionToBuckets)
 				return
 			}
-			if (i < 30) {
-				check()
+			if (i < 5) {
+				checkCummulative()
 			}
 		}
-		check()
+		checkCummulative()
+
+		i = 0
+		const checkSeparate = () => {
+			i++
+			// console.log('checking specific ', i)
+			const checkThis = transactions[i]
+			const sum = checkThis.amount
+
+			if (accountDiff == sum * 100) {
+				console.log('specific ' + i + ' transactions will fix it')
+				addTransactionToBuckets(checkThis)
+				return
+			}
+			if (i < 10) {
+				checkSeparate()
+			}
+		}
+		checkSeparate()
+
+
+
 		// if (accountDiff == tToAdd.amount * 100) {
 		// 	console.log('last trans will fix it')
 		// 	addTransactionToBuckets(tToAdd)
