@@ -23,12 +23,15 @@ const yo = async () => {
 	const account = await getBankAccount()
 
 	const bucketsBalance = getBalance(db)
-
-	const realBalance = account.available * 100
+	
+	const realBalance = Math.round(account.available * 100)
+	console.log('account.available: ', account.available);
 	if (bucketsBalance == realBalance) {
 		console.log('same! ALL GOOD!!!!')
 	} else {
 		console.log('not same!')
+		console.log('bucketsBalance: ', bucketsBalance);
+		console.log('realBalance: ', realBalance);
 		const accountDiff = realBalance - bucketsBalance
 		console.log('accountDiff: ', accountDiff / 100);
 		let i = 0
@@ -93,7 +96,7 @@ const yo = async () => {
 const getBalance = (db) => {
 	const acc = db.prepare('SELECT balance FROM account WHERE name = ?').get("Sbanken")
 	console.log('acc: ', acc);
-	return Math.round(acc.balance * 100) / 100
+	return acc.balance
 }
 
 const addTransactionToBuckets = (db, transaction) => {
