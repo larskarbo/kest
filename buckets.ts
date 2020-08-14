@@ -93,7 +93,7 @@ const yo = async () => {
 const getBalance = (db) => {
 	const acc = db.prepare('SELECT balance FROM account WHERE name = ?').get("Sbanken")
 	console.log('acc: ', acc);
-	return acc.balance
+	return Math.round(acc.balance * 100) / 100
 }
 
 const addTransactionToBuckets = (db, transaction) => {
