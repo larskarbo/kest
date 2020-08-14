@@ -15,19 +15,6 @@ const db = Database('./Budget1.buckets', { verbose: console.log });
 
 const yo = async () => {
 
-	dropbox({
-		resource: 'files/upload',
-		parameters: {
-			path: '/Budget1.buckets'
-		},
-		readStream: fs.createReadStream('./Budget1.buckets')
-	}, (err, result, response) => {
-		console.log('response: ', response);
-		console.log('err: ', err);
-		console.log('result: ', result);
-		//upload completed
-	});
-	return
 	const transactions = await getTransactions()
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
@@ -126,6 +113,19 @@ const addTransactionToBuckets = (transaction) => {
 	}
 	const sql = `INSERT INTO account_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
 	db.prepare(sql).run(...Object.values(add))
+
+	dropbox({
+		resource: 'files/upload',
+		parameters: {
+			path: '/Budget1.buckets'
+		},
+		readStream: fs.createReadStream('./Budget1.buckets')
+	}, (err, result, response) => {
+		console.log('response: ', response);
+		console.log('err: ', err);
+		console.log('result: ', result);
+		//upload completed
+	});
 
 	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text)
 }
