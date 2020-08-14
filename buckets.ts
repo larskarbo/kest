@@ -111,8 +111,8 @@ const addTransactionToBuckets = (db, transaction) => {
 		amount: transaction.amount * 100,
 		fi_id: v4(),
 		general_cat: '',
-		created: transaction.accountingDate,
-		posted: transaction.accountingDate,
+		// created: transaction.accountingDate,
+		// posted: transaction.accountingDate,
 	}
 	const sql = `INSERT INTO account_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
 	db.prepare(sql).run(...Object.values(add))
