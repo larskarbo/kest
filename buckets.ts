@@ -119,7 +119,7 @@ const addTransactionToBuckets = (db, transaction) => {
 
 	uploadDropBox()
 
-	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text)
+	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text + ": "  + (transaction.amount * 100) + " kr")
 }
 
 const uploadDropBox = () => {
