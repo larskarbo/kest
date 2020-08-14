@@ -3,10 +3,31 @@ import { getTransactions, getBankAccount, startPolling } from "./sbanken"
 import * as Database from "better-sqlite3"
 import { v4 } from "uuid"
 import axios from "axios"
+import * as fs from "fs"
 import * as moment from "moment"
+const dropboxV2Api = require('dropbox-v2-api');
+
+const dropbox = dropboxV2Api.authenticate({
+	token: process.env.DROPBOX_API
+});
+
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
 const yo = async () => {
+
+	dropbox({
+		resource: 'files/upload',
+		parameters: {
+			path: '/Budget1.buckets'
+		},
+		readStream: fs.createReadStream('./Budget1.buckets')
+	}, (err, result, response) => {
+		console.log('response: ', response);
+		console.log('err: ', err);
+		console.log('result: ', result);
+		//upload completed
+	});
+	return
 	const transactions = await getTransactions()
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
@@ -15,21 +36,21 @@ const yo = async () => {
 	const account = await getBankAccount()
 
 	const bucketsBalance = getBalance()
-	
+
 	const realBalance = account.available * 100
 	if (bucketsBalance == realBalance) {
 		console.log('same! ALL GOOD!!!!')
 	} else {
 		console.log('not same!')
 		const accountDiff = realBalance - bucketsBalance
-		console.log('accountDiff: ', accountDiff/100);
+		console.log('accountDiff: ', accountDiff / 100);
 		let i = 0
 		const checkCummulative = () => {
 			i++
 			const checkThese = transactions.slice(0, i)
 			const sum = Math.round(checkThese.reduce((acc, cur) => acc + cur.amount, 0) * 100) / 100
 			const last = checkThese[checkThese.length - 1]
-			console.log(last.amount, last.text,' ', sum);
+			console.log(last.amount, last.text, ' ', sum);
 			// console.log(last.te)
 			// console.log('last.created: ', last.created)
 			// console.log('last: ', last)
