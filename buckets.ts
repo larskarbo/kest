@@ -5,15 +5,8 @@ import { v4 } from "uuid"
 import axios from "axios"
 import * as fs from "fs"
 import * as moment from "moment"
-const dropboxV2Api = require('dropbox-v2-api');
-
-const dropbox = dropboxV2Api.authenticate({
-	token: process.env.DROPBOX_API
-});
-
 
 const yo = async () => {
-	await downloadDropBox()
 	const db = Database('./Budget1.buckets', { verbose: console.log });
 	const transactions = await getTransactions()
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
@@ -117,39 +110,8 @@ const addTransactionToBuckets = (db, transaction) => {
 	const sql = `INSERT INTO account_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
 	db.prepare(sql).run(...Object.values(add))
 
-	uploadDropBox()
 
-	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text + ": "  + (transaction.amount * 100) + " kr")
+	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text + ": "  + Math.abs(transaction.amount) + " kr")
 }
-
-const uploadDropBox = () => {
-	dropbox({
-		resource: 'files/upload',
-		parameters: {
-			path: '/Budget1.buckets'
-		},
-		readStream: fs.createReadStream('./Budget1.buckets')
-	}, (err, result, response) => {
-		console.log('err: ', JSON.stringify(err));
-		console.log('result: ', result);
-		//upload completed
-	});
-}
-
-const downloadDropBox = () => new Promise((resolve) => {
-	dropbox({
-		resource: 'files/download',
-		parameters: {
-			path: '/Budget1.buckets'
-		}
-	}, (err, result, response) => {
-		console.log('err: ', err);
-		//download completed
-		console.log('dl complete')
-		setTimeout(resolve, 500)
-	})
-		.pipe(fs.createWriteStream('./Budget1.buckets'));
-})
-
 
 yo()
