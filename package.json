@@ -21,7 +21,7 @@
     "uuid": "^8.3.0"
   },
   "scripts": {
-    "start": "concurrently -k \"pipenv run python server/server.py\" \"ts-node src/index\"",
+    "start": "ts-node src/index",
     "dev": "ts-node-dev --no-notify src/index.ts",
     "devserver": "pipenv run python server/server.py"
   },
