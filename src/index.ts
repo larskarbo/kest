@@ -2,7 +2,8 @@ import Telegraf, { Markup, Context } from "telegraf";
 import axios from "axios";
 import Quiz, { Alternative, Question } from "telegraf-ask";
 const roundTo = require('round-to');
-import { getTransactions, getBankAccount, startPolling } from "../sbanken"
+import { getTransactions, getBankAccount } from "../sbanken"
+import { onNewTransaction, getBuckets, associateTrans } from "../buckets"
 
 var arrayChunk = require("array-chunk");
 
@@ -35,23 +36,20 @@ interface Account {
 }
 
 const help = async (ctx) => {
-	const os = await diff(ctx)
-	if (os != 0) {
-		await ctx.reply("Kest and bank not in sync: " + os + " too much in kest");
-	} else {
-		await ctx.reply("Kest and bank in sync!")
-	}
-	ctx.reply("/start /add /recalculate /overview /awaiting /latest /fillfromcolumn")
+	ctx.reply("/start /add /overview /latest")
 }
 
 bot.command("start", async (ctx) => {
-	// ctx.session.done = 0; // restart done counter
-	// ctx.session.quiz = null;
-	console.log(ctx.from.id)
-	await ctx.reply("Welcome to the kest Bot! ⭐️");
-	await help(ctx)
-
+	await ctx.reply("Starting the kest Bot! ⭐️");
+	
+	onNewTransaction((trans) => {
+		console.log('trans: ', trans);
+	
+		askAddTransaction(ctx, trans)
+	})
 });
+
+bot.telegram.sendMessage("912275377", "msg")
 
 bot.use((ctx, next) => {
 	// console.log(ctx)
@@ -59,12 +57,10 @@ bot.use((ctx, next) => {
 	next();
 });
 
-bot.command("add", async (ctx) => {
-	askAddTransaction(ctx)
-});
-
-const askAddTransaction = async (ctx: Context, answers: object = {}) => {
-	const accounts: Account[] = await getAccounts(ctx);
+const askAddTransaction = async (ctx: Context, bTransaction: any) => {
+	const buckets = await getBuckets();
+	console.log('bTransaction: ', bTransaction);
+	console.log('buckets: ', buckets);
 
 	const questions: Question[] = [
 		{
@@ -91,11 +87,8 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 		},
 		{
 			text: "Which account do you want to take the money from?",
-			key: "account",
-			alternatives: accounts
-				.filter(a => a.medium == "kest")
-				.filter(a => !a.tags.includes("hide"))
-				.filter(a => !a.tags.includes("lt"))
+			key: "bucket",
+			alternatives: buckets
 				.map((a) => ({
 					text: a.name,
 					value: a.id,
@@ -105,22 +98,27 @@ const askAddTransaction = async (ctx: Context, answers: object = {}) => {
 
 	const quiz = new Quiz({
 		questions: questions,
-		answers: answers,
+		answers: {
+			name: bTransaction.memo,
+			amount: bTransaction.amount * -1
+		},
 		ctx: ctx,
 		bot: bot,
 	});
 	quiz.startQuiz(async (answers: any) => {
-		const transaction: Transaction = {
+		const transaction: any = {
 			name: answers.name,
 			amount: parseFloat(answers.amount),
-			fromAccount: answers.account,
+			fromBucket: answers.bucket,
 		};
-		await ctx.reply("Updating db");
-		const preAccount = (await getAccounts(ctx)).find(a => a.id == answers.account)
-		await pythonBridge(ctx.from.id).post("addTransaction", transaction);
-		const postAccount = (await getAccounts(ctx)).find(a => a.id == answers.account)
-		await ctx.reply(`${preAccount.name} went from ${preAccount.balance} → ${postAccount.balance}`);
-		help(ctx)
+		console.log('transaction: ', transaction);
+		console.log('bTransaction', bTransaction)
+		// await ctx.reply("Updating db");
+		const preAccount = (getBuckets()).find(a => a.id == answers.bucket)
+		associateTrans(bTransaction, answers.bucket)
+		const postAccount = (getBuckets()).find(a => a.id == answers.bucket)
+		await ctx.reply(`${preAccount.name} went from ${preAccount.balance/100} → ${postAccount.balance/100}`);
+		// help(ctx)
 
 	});
 }
@@ -153,16 +151,6 @@ const getAccounts = async (ctx) => {
 				}))
 		})
 };
-
-bot.command("recalculate", async (ctx) => {
-	await pythonBridge(ctx.from.id).get("reCalculateAccounts");
-	ctx.reply("done");
-});
-
-bot.command("fillfromcolumn", async (ctx) => {
-	await pythonBridge(ctx.from.id).get("fillFromColumn");
-	ctx.reply("done");
-});
 
 bot.command("latest", async (ctx) => {
 
@@ -239,9 +227,8 @@ const diff = async (ctx) => {
 	return roundTo(asdf - bank.available, 2)
 }
 
-startPolling((trans) => {
-	awaitingTransactions.push(trans)
-})
+
 
 // testTransaction()
+console.log('la')
 bot.launch();

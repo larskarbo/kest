@@ -5,17 +5,18 @@ import { v4 } from "uuid"
 import axios from "axios"
 import * as fs from "fs"
 import * as moment from "moment"
+const db = Database('./Budget1.buckets', { verbose: console.log });
 
 const yo = async () => {
-	const db = Database('./Budget1.buckets', { verbose: console.log });
 	const transactions = await getTransactions()
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
 	// transactions.slice(0,12).forEach(addTransactionToBuckets)
 
+
 	const account = await getBankAccount()
 
-	const bucketsBalance = getBalance(db)
+	const bucketsBalance = getBalance()
 	
 	const realBalance = Math.round(account.available * 100)
 	console.log('account.available: ', account.available);
@@ -41,7 +42,7 @@ const yo = async () => {
 			// console.log('date: ', date)
 			if (accountDiff == sum * 100) {
 				console.log('last ' + i + ' transactions will fix it')
-				checkThese.forEach(e => addTransactionToBuckets(db, e))
+				checkThese.forEach(e => addTransactionToBuckets(e))
 				return
 			}
 			if (i < 5) {
@@ -59,7 +60,7 @@ const yo = async () => {
 
 			if (accountDiff == sum * 100) {
 				console.log('specific ' + i + ' transactions will fix it')
-				addTransactionToBuckets(db, checkThis)
+				addTransactionToBuckets(checkThis)
 				return
 			}
 			if (i < 10) {
@@ -82,19 +83,44 @@ const yo = async () => {
 		// }
 	}
 	//
-
-
 }
 
-const getBalance = (db) => {
+let onNewTransactionCallback = (transaction) => {
+	console.log("No onNewTransactionCallback defined")
+}
+export const onNewTransaction = (cb) => {
+	onNewTransactionCallback = cb
+
+	yo()
+	setInterval(yo, 60000)
+}
+
+const getBalance = () => {
 	const acc = db.prepare('SELECT balance FROM account WHERE name = ?').get("Sbanken")
-	console.log('acc: ', acc);
 	return acc.balance
 }
 
-const addTransactionToBuckets = (db, transaction) => {
+export const getBuckets = () => {
+	const buckets = db.prepare('SELECT * FROM bucket').all()
+	return buckets
+}
 
 
+export const associateTrans = (transaction, bucketId) => {
+	const add = {
+		bucket_id: bucketId,
+		memo: transaction.memo,
+		amount: transaction.amount,
+		account_trans_id: transaction.id,
+		// created: transaction.accountingDate,
+		// posted: transaction.accountingDate,
+	}
+	console.log('add: ', add);
+	const sql = `INSERT INTO bucket_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
+	const res = db.prepare(sql).run(...Object.values(add))
+}
+
+export const addTransactionToBuckets = (transaction) => {
 	const ts = db.prepare('SELECT * FROM account_transaction').all()
 	console.log('ts: ', ts);
 
@@ -108,10 +134,12 @@ const addTransactionToBuckets = (db, transaction) => {
 		// posted: transaction.accountingDate,
 	}
 	const sql = `INSERT INTO account_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
-	db.prepare(sql).run(...Object.values(add))
+	const res = db.prepare(sql).run(...Object.values(add))
+	// console.log('res: ', res);
+	const lt = db.prepare('SELECT * FROM account_transaction WHERE id = ?').get(res.lastInsertRowid)
+	console.log('lt: ', lt);
 
 
-	axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text + ": "  + Math.abs(transaction.amount) + " kr")
+	onNewTransactionCallback(lt)
+	// axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=added " + transaction.text + ": "  + Math.abs(transaction.amount) + " kr")
 }
-
-yo()
