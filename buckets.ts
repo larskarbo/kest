@@ -7,8 +7,13 @@ import * as fs from "fs"
 import * as moment from "moment"
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
-const yo = async () => {
-	const transactions = await getTransactions()
+const represent = (intman) => {
+	return (intman/100).toFixed(2) + " kr"
+}
+
+export const run = async () => {
+	const transactions = (await getTransactions()).filter(t => t.text != "BACKSTUBE TORGGATAN")
+	console.log('transactions: ', transactions);
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
 	// transactions.slice(0,12).forEach(addTransactionToBuckets)
@@ -18,34 +23,33 @@ const yo = async () => {
 
 	const bucketsBalance = getBalance()
 	
-	const realBalance = Math.round(account.available * 100)
-	console.log('account.available: ', account.available);
+	const realBalance = account.available
+	console.log('account.available: ', represent(account.available));
 	if (bucketsBalance == realBalance) {
 		console.log('same! ALL GOOD!!!!')
 	} else {
 		console.log('not same!')
-		console.log('bucketsBalance: ', bucketsBalance);
-		console.log('realBalance: ', realBalance);
+		console.log('bucketsBalance: ', represent(bucketsBalance));
+		console.log('realBalance: ', represent(realBalance));
 		const accountDiff = realBalance - bucketsBalance
-		console.log('accountDiff: ', accountDiff / 100);
+		console.log('accountDiff: ', represent(accountDiff));
 		let i = 0
 		const checkCummulative = () => {
 			i++
 			const checkThese = transactions.slice(0, i)
-			const sum = Math.round(checkThese.reduce((acc, cur) => acc + cur.amount, 0) * 100) / 100
+			const sum = checkThese.reduce((acc, cur) => acc + cur.amount, 0)
 			const last = checkThese[checkThese.length - 1]
-			console.log(last.amount, last.text, ' ', sum);
 			// console.log(last.te)
 			// console.log('last.created: ', last.created)
 			// console.log('last: ', last)
 			// const date = new Date(last.accountingDate);
 			// console.log('date: ', date)
-			if (accountDiff == sum * 100) {
+			if (accountDiff == sum) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
 				return
 			}
-			if (i < 5) {
+			if (i < 12) {
 				checkCummulative()
 			}
 		}
@@ -88,11 +92,12 @@ const yo = async () => {
 let onNewTransactionCallback = (transaction) => {
 	console.log("No onNewTransactionCallback defined")
 }
+
 export const onNewTransaction = (cb) => {
 	onNewTransactionCallback = cb
 
-	yo()
-	setInterval(yo, 60000)
+	run()
+	setInterval(run, 60000)
 }
 
 const getBalance = () => {

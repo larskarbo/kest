@@ -1,5 +1,7 @@
 const api = require("./sbankenapi.js");
 
+const deciTo100 = (decifucker) => Math.round(decifucker * 100)
+
 export const getTransactions = async () => {
 	const token = (await api.getAccessToken()).access_token;
 	// console.log('token: ', token);
@@ -9,7 +11,10 @@ export const getTransactions = async () => {
 	// console.log("accId: ", accId);
 
 	const trans = await api.getAccountTransactions(accId, token);
-	return trans.items;
+	return trans.items.map(t => ({
+		...t,
+		amount: deciTo100(t.amount)
+	}))
 };
 
 export const getBankAccount = async () => {
@@ -19,7 +24,11 @@ export const getBankAccount = async () => {
 	// console.log("acc: ", acc);
 	const acc = accs.items.find((i) => i.name == "asdfbruk");
 
-	return acc;
+	return {
+		...acc,
+		balance: deciTo100(acc.balance),
+		available: deciTo100(acc.available),
+	};
 };
 
 export const startPolling = async (onNewTransaction) => {
