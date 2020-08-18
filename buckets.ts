@@ -62,7 +62,7 @@ export const run = async () => {
 			const checkThis = transactions[i]
 			const sum = checkThis.amount
 
-			if (accountDiff == sum * 100) {
+			if (accountDiff == sum) {
 				console.log('specific ' + i + ' transactions will fix it')
 				addTransactionToBuckets(checkThis)
 				return
@@ -75,16 +75,6 @@ export const run = async () => {
 
 
 
-		// if (accountDiff == tToAdd.amount * 100) {
-		// 	console.log('last trans will fix it')
-		// 	addTransactionToBuckets(tToAdd)
-		// } else {
-		// 	console.log('realBalance: ', realBalance);
-		// 	console.log('bucketsBalance: ', bucketsBalance);
-		// 	console.log('DIFF: ', realBalance - bucketsBalance);
-		// 	console.log('TODO: check if 2 or 3 trans will fix it')
-
-		// }
 	}
 	//
 }
@@ -132,7 +122,7 @@ export const addTransactionToBuckets = (transaction) => {
 	const add = {
 		account_id: 2,
 		memo: transaction.text,
-		amount: transaction.amount * 100,
+		amount: transaction.amount,
 		fi_id: v4(),
 		general_cat: '',
 		// created: transaction.accountingDate,
