@@ -13,7 +13,6 @@ const represent = (intman) => {
 
 export const run = async () => {
 	const transactions = (await getTransactions()).filter(t => t.text != "BACKSTUBE TORGGATAN")
-	console.log('transactions: ', transactions);
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
 	// transactions.slice(0,12).forEach(addTransactionToBuckets)
@@ -44,6 +43,7 @@ export const run = async () => {
 			// console.log('last: ', last)
 			// const date = new Date(last.accountingDate);
 			// console.log('date: ', date)
+			console.log("cumCheck: ", i, represent(last.amount), represent(sum))
 			if (accountDiff == sum) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
@@ -110,14 +110,12 @@ export const associateTrans = (transaction, bucketId) => {
 		// created: transaction.accountingDate,
 		// posted: transaction.accountingDate,
 	}
-	console.log('add: ', add);
 	const sql = `INSERT INTO bucket_transaction (${Object.keys(add).join(",")}) VALUES (${Object.keys(add).map(_ => "?").join(",")})`
 	const res = db.prepare(sql).run(...Object.values(add))
 }
 
 export const addTransactionToBuckets = (transaction) => {
 	const ts = db.prepare('SELECT * FROM account_transaction').all()
-	console.log('ts: ', ts);
 
 	const add = {
 		account_id: 2,
