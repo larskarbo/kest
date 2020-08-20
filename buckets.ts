@@ -7,7 +7,7 @@ import * as fs from "fs"
 import * as moment from "moment"
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
-const represent = (intman) => {
+export const represent = (intman) => {
 	return (intman/100).toFixed(2) + " kr"
 }
 
