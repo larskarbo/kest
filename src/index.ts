@@ -50,7 +50,7 @@ bot.command("start", async (ctx) => {
 	})
 });
 
-bot.telegram.sendMessage("912275377", "msg")
+bot.telegram.sendMessage("912275377", "Ready. Please /start")
 
 bot.use((ctx, next) => {
 	// console.log(ctx)
