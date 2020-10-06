@@ -5,6 +5,7 @@ var credentials = {
   clientid: "96c332c1db0043a6b119effadebfc286",
   secret: process.env.SBANKEN_PW,
 };
+console.log('process.env.SBANKEN_PW: ', process.env.SBANKEN_PW);
 
 exports.getAccessToken = () => {
   var identityServerUrl =
@@ -32,7 +33,7 @@ exports.getAccessToken = () => {
       .set("customerId", credentials.userid)
       .end(function (err, res) {
         if (err || !res.ok) {
-          reject();
+          reject(err);
         } else {
           resolve(res.body);
         }

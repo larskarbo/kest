@@ -11,6 +11,7 @@
     "better-sqlite3": "^7.1.0",
     "btoa": "^1.2.1",
     "dropbox-v2-api": "^2.4.26",
+    "fs-extra": "^9.0.1",
     "moment": "^2.27.0",
     "round-to": "^4.1.0",
     "sqlite3": "^5.0.0",

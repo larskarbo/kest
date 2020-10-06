@@ -1,9 +1,9 @@
 
-import { getTransactions, getBankAccount, startPolling } from "./sbanken"
+import { getTransactions, getBankAccount } from "./sbanken"
 import * as Database from "better-sqlite3"
 import { v4 } from "uuid"
 import axios from "axios"
-import * as fs from "fs"
+import * as fs from "fs-extra"
 import * as moment from "moment"
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
@@ -12,7 +12,7 @@ export const represent = (intman) => {
 }
 
 export const run = async () => {
-	const transactions = (await getTransactions()).filter(t => t.text != "BACKSTUBE TORGGATAN")
+	const transactions = (await getTransactions()).filter(t => !t.text.includes("458"))
 	// console.log('transactions: ', transactions.filter(t => t.isReservation));
 
 	// transactions.slice(0,12).forEach(addTransactionToBuckets)
@@ -33,6 +33,7 @@ export const run = async () => {
 		const accountDiff = realBalance - bucketsBalance
 		console.log('accountDiff: ', represent(accountDiff));
 		let i = 0
+		const logs= []
 		const checkCummulative = () => {
 			i++
 			const checkThese = transactions.slice(0, i)
@@ -43,35 +44,42 @@ export const run = async () => {
 			// console.log('last: ', last)
 			// const date = new Date(last.accountingDate);
 			// console.log('date: ', date)
-			console.log("cumCheck: ", i, represent(last.amount), represent(sum))
-			if (accountDiff == sum) {
+			const log = ["cumCheck: ", i, represent(last.amount), represent(sum), "\t\t" + last.text.slice(0,55)]
+			console.log(...log)
+			logs.push(log)
+			if (accountDiff == sum ) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
 				return
 			}
-			if (i < 12) {
+			if (i < 42) {
 				checkCummulative()
+			} else {
+
+				fs.writeJSON("logs/log: "+new Date().toDateString()+".json", {logs})
+				axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=something wrong!")
 			}
+
 		}
 		checkCummulative()
 
-		i = 0
-		const checkSeparate = () => {
-			i++
-			// console.log('checking specific ', i)
-			const checkThis = transactions[i]
-			const sum = checkThis.amount
+		// i = 0
+		// const checkSeparate = () => {
+		// 	i++
+		// 	// console.log('checking specific ', i)
+		// 	const checkThis = transactions[i]
+		// 	const sum = checkThis.amount
 
-			if (accountDiff == sum) {
-				console.log('specific ' + i + ' transactions will fix it')
-				addTransactionToBuckets(checkThis)
-				return
-			}
-			if (i < 10) {
-				checkSeparate()
-			}
-		}
-		checkSeparate()
+		// 	if (accountDiff == sum) {
+		// 		console.log('specific ' + i + ' transactions will fix it')
+		// 		addTransactionToBuckets(checkThis)
+		// 		return
+		// 	}
+		// 	if (i < 10) {
+		// 		checkSeparate()
+		// 	}
+		// }
+		// checkSeparate()
 
 
 

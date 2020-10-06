@@ -3,18 +3,25 @@ const api = require("./sbankenapi.js");
 const deciTo100 = (decifucker) => Math.round(decifucker * 100)
 
 export const getTransactions = async () => {
-	const token = (await api.getAccessToken()).access_token;
-	// console.log('token: ', token);
-	const acc = await getBankAccount();
+	try {
+		const token = (await api.getAccessToken()).access_token;
 
-	const accId = acc.accountId;
-	// console.log("accId: ", accId);
+		// console.log('token: ', token);
+		const acc = await getBankAccount();
 
-	const trans = await api.getAccountTransactions(accId, token);
-	return trans.items.map(t => ({
-		...t,
-		amount: deciTo100(t.amount)
-	}))
+		const accId = acc.accountId;
+		// console.log("accId: ", accId);
+
+		const trans = await api.getAccountTransactions(accId, token);
+		return trans.items.map(t => ({
+			...t,
+			amount: deciTo100(t.amount)
+		}))
+
+
+	} catch (e) {
+		console.log('error', e)
+	}
 };
 
 export const getBankAccount = async () => {
@@ -36,7 +43,7 @@ export const startPolling = async (onNewTransaction) => {
 	setInterval(async () => {
 		const trans = await getTransactions();
 		const transAmounts = trans.map(t => t.amount)
-		if(JSON.stringify(transAmounts) != JSON.stringify(oldTransactions)){
+		if (JSON.stringify(transAmounts) != JSON.stringify(oldTransactions)) {
 			console.log(trans[0])
 			onNewTransaction(trans[0])
 		}
