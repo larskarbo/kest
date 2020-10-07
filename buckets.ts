@@ -5,6 +5,7 @@ import { v4 } from "uuid"
 import axios from "axios"
 import * as fs from "fs-extra"
 import * as moment from "moment"
+import deepEqual from "deep-equal"
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
 export const represent = (intman) => {
@@ -55,9 +56,12 @@ export const run = async () => {
 			if (i < 42) {
 				checkCummulative()
 			} else {
-
-				fs.writeJSON("logs/log: "+new Date().toDateString()+".json", {logs})
-				axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=something wrong!")
+				const filePath = "logs/log: "+new Date().toDateString()+".json"
+				const filejson = fs.readJSON(filePath)
+				if(!deepEqual(filejson, logs)){
+					fs.writeJSON(filePath, logs)
+					axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=something wrong!")
+				}
 			}
 
 		}
