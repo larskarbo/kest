@@ -5,7 +5,7 @@ import { v4 } from "uuid"
 import axios from "axios"
 import * as fs from "fs-extra"
 import * as moment from "moment"
-import deepEqual from "deep-equal"
+const deepEqual = require("deep-equal")
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
 export const represent = (intman) => {
