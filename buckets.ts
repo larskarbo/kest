@@ -48,7 +48,9 @@ export const run = async () => {
 			const log = ["cumCheck: ", i, represent(last.amount), represent(sum), "\t\t" + last.text.slice(0,55)]
 			console.log(...log)
 			logs.push(log)
-			if (accountDiff == sum ) {
+			if (accountDiff == sum 
+				// || i == 20
+				) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
 				return
@@ -60,7 +62,7 @@ export const run = async () => {
 				const filejson = fs.readJSON(filePath)
 				if(!deepEqual(filejson, logs)){
 					fs.writeJSON(filePath, logs)
-					axios.get("https://api.telegram.org/bot1196576929:AAFCVPBTMcSUlrHAIFBO_Ni7e9em0Nje10U/sendMessage?chat_id=912275377&text=something wrong!")
+					
 				}
 			}
 
