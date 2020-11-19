@@ -49,7 +49,7 @@ export const run = async () => {
 			console.log(...log)
 			logs.push(log)
 			if (accountDiff == sum 
-				// || i == 20
+				// || i == 5
 				) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
@@ -69,23 +69,23 @@ export const run = async () => {
 		}
 		checkCummulative()
 
-		// i = 0
-		// const checkSeparate = () => {
-		// 	i++
-		// 	// console.log('checking specific ', i)
-		// 	const checkThis = transactions[i]
-		// 	const sum = checkThis.amount
+		i = 0
+		const checkSeparate = () => {
+			i++
+			// console.log('checking specific ', i)
+			const checkThis = transactions[i]
+			const sum = checkThis.amount
 
-		// 	if (accountDiff == sum) {
-		// 		console.log('specific ' + i + ' transactions will fix it')
-		// 		addTransactionToBuckets(checkThis)
-		// 		return
-		// 	}
-		// 	if (i < 10) {
-		// 		checkSeparate()
-		// 	}
-		// }
-		// checkSeparate()
+			if (accountDiff == sum) {
+				console.log('specific ' + i + ' transactions will fix it')
+				addTransactionToBuckets(checkThis)
+				return
+			}
+			if (i < 10) {
+				checkSeparate()
+			}
+		}
+		checkSeparate()
 
 
 

@@ -25,7 +25,7 @@ const yo = async () => {
       bucket: buckets.find(b => b.id == tr.bucket_id).name
     }
   })
-  const p = transes.filter(t => t.bucket == "French project")
+  const p = transes.filter(t => t.bucket.includes("Psy"))
   // console.log('p: ', p);
   let cum = 0
   p.forEach(e => {
