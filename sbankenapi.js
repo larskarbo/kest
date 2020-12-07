@@ -1,5 +1,8 @@
 const request = require("superagent");
 var btoa = require("btoa");
+
+require('dotenv').config()
+
 var credentials = {
   userid: "09019736366",
   clientid: "96c332c1db0043a6b119effadebfc286",

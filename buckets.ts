@@ -9,7 +9,7 @@ const deepEqual = require("deep-equal")
 const db = Database('./Budget1.buckets', { verbose: console.log });
 
 export const represent = (intman) => {
-	return (intman/100).toFixed(2) + " kr"
+	return (intman / 100).toFixed(2) + " kr"
 }
 
 export const run = async () => {
@@ -22,7 +22,7 @@ export const run = async () => {
 	const account = await getBankAccount()
 
 	const bucketsBalance = getBalance()
-	
+
 	const realBalance = account.available
 	console.log('account.available: ', represent(account.available));
 	if (bucketsBalance == realBalance) {
@@ -34,7 +34,7 @@ export const run = async () => {
 		const accountDiff = realBalance - bucketsBalance
 		console.log('accountDiff: ', represent(accountDiff));
 		let i = 0
-		const logs= []
+		const logs = []
 		const checkCummulative = () => {
 			i++
 			const checkThese = transactions.slice(0, i)
@@ -45,12 +45,12 @@ export const run = async () => {
 			// console.log('last: ', last)
 			// const date = new Date(last.accountingDate);
 			// console.log('date: ', date)
-			const log = ["cumCheck: ", i, represent(last.amount), represent(sum), "\t\t" + last.text.slice(0,55)]
+			const log = ["cumCheck: ", i, represent(last.amount), represent(sum), "\t\t" + last.text.slice(0, 55)]
 			console.log(...log)
 			logs.push(log)
-			if (accountDiff == sum 
+			if (accountDiff == sum
 				// || i == 5
-				) {
+			) {
 				console.log('last ' + i + ' transactions will fix it')
 				checkThese.forEach(e => addTransactionToBuckets(e))
 				return
@@ -58,11 +58,11 @@ export const run = async () => {
 			if (i < 42) {
 				checkCummulative()
 			} else {
-				const filePath = "logs/log: "+new Date().toDateString()+".json"
+				const filePath = "logs/log: " + new Date().toDateString() + ".json"
 				const filejson = fs.readJSON(filePath)
-				if(!deepEqual(filejson, logs)){
+				if (!deepEqual(filejson, logs)) {
 					fs.writeJSON(filePath, logs)
-					
+
 				}
 			}
 
@@ -110,7 +110,7 @@ const getBalance = () => {
 }
 
 export const getBuckets = () => {
-	const buckets = db.prepare('SELECT * FROM bucket').all()
+	const buckets = db.prepare('SELECT * FROM bucket').all().filter(b => !b.kicked)
 	return buckets
 }
 
